@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REZZ Musik</title>
+  <style>
+    :root {
+      --bg-dark: #03070a;
+      --bg-row: rgba(7, 22, 31, 0.88);
+      --bg-row-active: rgba(11, 36, 49, 0.96);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.34);
+      --cyan-border: rgba(0, 240, 255, 0.34);
+      --text-main: #f4ffff;
+      --text-muted: #8eb2bf;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text-main);
+      position: relative;
+      overflow-x: hidden;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(0, 240, 255, 0.035) 0px,
+          rgba(0, 240, 255, 0.035) 2px,
+          transparent 2px,
+          transparent 16px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 240, 255, 0.025) 0px,
+          rgba(0, 240, 255, 0.025) 1px,
+          transparent 1px,
+          transparent 36px
+        ),
+        radial-gradient(circle at 18% 8%, rgba(0, 240, 255, 0.28), transparent 44%),
+        radial-gradient(circle at 86% 28%, rgba(0, 185, 220, 0.22), transparent 48%),
+        radial-gradient(circle at 50% 78%, rgba(0, 240, 255, 0.14), transparent 55%),
+        linear-gradient(180deg, #071c26 0%, #050e15 45%, var(--bg-dark) 100%);
+      padding-bottom: 132px;
+    }
+
+    /* Motif tema musik menyeluruh di latar belakang */
+    .bg-music-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-eq-strip {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(540px, 96vw);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 5px;
+      opacity: 0.16;
+    }
+
+    .bg-eq-strip span {
+      flex: 1;
+      border-radius: 99px 99px 2px 2px;
+      background: linear-gradient(180deg, var(--cyan), rgba(0, 240, 255, 0.06));
+    }
+
+    .bg-eq-strip.top-strip {
+      top: 108px;
+      height: 54px;
+    }
+
+    .bg-eq-strip.mid-strip {
+      top: 46%;
+      height: 68px;
+      opacity: 0.12;
+    }
+
+    .bg-eq-strip.bot-strip {
+      bottom: 135px;
+      height: 52px;
+      opacity: 0.13;
+    }
+
+    .bg-eq-strip span:nth-child(3n+1) { height: 35%; }
+    .bg-eq-strip span:nth-child(3n+2) { height: 75%; }
+    .bg-eq-strip span:nth-child(3n)   { height: 55%; }
+    .bg-eq-strip span:nth-child(4n)   { height: 95%; }
+    .bg-eq-strip span:nth-child(5n)   { height: 45%; }
+
+    .bg-note {
+      position: absolute;
+      color: var(--cyan);
+      opacity: 0.13;
+      user-select: none;
+      font-weight: 700;
+    }
+
+    .bg-note.n1 { top: 82px; left: 8%; font-size: 1.5rem; }
+    .bg-note.n2 { top: 155px; right: 9%; font-size: 1.8rem; }
+    .bg-note.n3 { top: 34%; left: 6%; font-size: 1.25rem; }
+    .bg-note.n4 { top: 56%; right: 7%; font-size: 1.6rem; }
+    .bg-note.n5 { top: 72%; left: 10%; font-size: 1.7rem; }
+    .bg-note.n6 { bottom: 155px; right: 11%; font-size: 1.35rem; }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 16px 14px 24px;
+    }
+
+    .brand-mini {
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .brand-mini span {
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* Halaman Home */
+    .top-search {
+      margin-bottom: 18px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 13px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--cyan-border);
+      background: rgba(5, 14, 20, 0.92);
+      color: var(--text-main);
+      font-size: 0.96rem;
+      outline: none;
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.14);
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 22px var(--cyan-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .list-title {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-title::before {
+      content: "";
+      width: 4px;
+      height: 15px;
+      border-radius: 99px;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .clear-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .clear-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .played-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .song-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background:
+        linear-gradient(90deg, rgba(0, 240, 255, 0.08), transparent 45%),
+        var(--bg-row);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .song-item:hover,
+    .song-item.active {
+      background:
+        linear-gradient(90deg, rgba(0, 240, 255, 0.17), transparent 60%),
+        var(--bg-row-active);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.18);
+    }
+
+    .song-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.24), rgba(5, 19, 27, 0.96));
+      border: 1px solid rgba(0, 240, 255, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      font-size: 1rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .song-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .song-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-artist {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .action-tag {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #041016;
+      background: var(--cyan);
+      padding: 6px 11px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .empty-search {
+      padding: 16px 14px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: rgba(6, 17, 24, 0.78);
+      border: 1px dashed rgba(0, 240, 255, 0.25);
+      border-radius: 11px;
+    }
+
+    /* Halaman Info */
+    .info-page {
+      display: none;
+    }
+
+    .info-page.active {
+      display: block;
+    }
+
+    .info-card {
+      padding: 16px 14px;
+      border-radius: 13px;
+      background:
+        linear-gradient(135deg, rgba(0, 240, 255, 0.11), rgba(6, 20, 28, 0.92));
+      border: 1px solid var(--cyan-border);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.12);
+      margin-bottom: 12px;
+    }
+
+    .info-release {
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-date {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .info-creator-name {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .info-role {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 12px;
+    }
+
+    .info-row {
+      padding: 11px 13px;
+      border-radius: 11px;
+      background: var(--bg-row);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+    }
+
+    .info-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .info-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    .info-note {
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: rgba(0, 240, 255, 0.09);
+      border: 1px solid var(--cyan);
+      color: var(--text-main);
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.45;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.14);
+    }
+
+    /* Dock bawah: lagu sedang diputar (jika ada) + menu Home & Info */
+    .bottom-dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(4, 10, 15, 0.97);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--cyan-border);
+      z-index: 30;
+    }
+
+    .bottom-inner {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 8px 14px 10px;
+    }
+
+    .now-playing-box {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+      border-radius: 11px;
+      background: linear-gradient(90deg, rgba(0, 240, 255, 0.18), rgba(7, 24, 34, 0.96));
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.18);
+    }
+
+    .now-playing-box.visible {
+      display: flex;
+    }
+
+    .now-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .now-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .now-artist {
+      font-size: 0.74rem;
+      color: var(--cyan);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .now-btn {
+      border: none;
+      background: var(--cyan);
+      color: #041016;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 0 14px var(--cyan-glow);
+      flex-shrink: 0;
+    }
+
+    .nav-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .nav-tab {
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      background: rgba(7, 20, 28, 0.85);
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab.active {
+      color: #041016;
+      background: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-music-layer" aria-hidden="true">
+    <span class="bg-note n1">♪</span>
+    <span class="bg-note n2">♫</span>
+    <span class="bg-note n3">♩</span>
+    <span class="bg-note n4">♬</span>
+    <span class="bg-note n5">♪</span>
+    <span class="bg-note n6">♫</span>
+
+    <div class="bg-eq-strip top-strip">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="bg-eq-strip mid-strip">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="bg-eq-strip bot-strip">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="brand-mini">REZZ <span>Musik</span></div>
+
+    <!-- Halaman Home -->
+    <div id="homePage">
+      <div class="top-search">
+        <input
+          id="searchInput"
+          class="search-input"
+          type="search"
+          placeholder="Ketik judul lagu atau penyanyi..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="list-header">
+        <div id="listHeading" class="list-title">Playlist</div>
+        <button id="clearBtn" class="clear-btn" type="button">Hapus</button>
+      </div>
+
+      <div id="playedStack" class="played-stack"></div>
+    </div>
+
+    <!-- Halaman Info -->
+    <div id="infoPage" class="info-page">
+      <div class="info-card">
+        <div class="info-release">DI RILIS OLEH: REZZ PROJECT</div>
+        <div class="info-date">Pada tanggal 24 November</div>
+        <div class="info-creator-name">Reza</div>
+        <div class="info-role">Software Engineer &amp; Application Developer<br />Sekaligus (CEO) dari REZZ PROJECT</div>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <div class="info-label">Instagram</div>
+          <div class="info-value">@__eyzz11__<br />@_rezz_project_</div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">TikTok</div>
+          <div class="info-value">@eyzz__11</div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">WhatsApp</div>
+          <div class="info-value">085138939550</div>
+        </div>
+      </div>
+
+      <div class="info-note">
+        Boleh hubungi developer, teruma buat cewek boleh banget
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-dock">
+    <div class="bottom-inner">
+      <div id="nowPlayingBox" class="now-playing-box">
+        <div class="now-text">
+          <div id="nowTitle" class="now-title"></div>
+          <div id="nowArtist" class="now-artist"></div>
+        </div>
+        <button id="playPauseBtn" class="now-btn" type="button">Putar</button>
+      </div>
+
+      <div class="nav-row">
+        <button id="tabHome" class="nav-tab active" type="button">Home</button>
+        <button id="tabInfo" class="nav-tab" type="button">Info</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" preload="metadata"></audio>
+
+  <script>
+    const STORAGE_KEY = "rezz_musik_playlist_v1";
+
+    // Opsional: isi jika kamu mau menarik daftar lagu dari file JSON online (biarkan "" untuk pakai catalog lokal di bawah)
+    const REMOTE_CATALOG_URL = "";
+
+    // Katalog lagu: isi audioUrl dengan URL audio online langsung (misalnya .mp3)
+    let catalog = [
+      { id: 1, title: "Senja di Kota Hujan", artist: "Raka Pradana", audioUrl: "" },
+      { id: 2, title: "Langkah Malam", artist: "Nadia Kusuma", audioUrl: "" },
+      { id: 3, title: "Rindu yang Pulang", artist: "Sora Nusantara", audioUrl: "" },
+      { id: 4, title: "Cahaya Pesisir", artist: "Bima & Senandung", audioUrl: "" },
+      { id: 5, title: "Angin Pelabuhan", artist: "Tara Wijaya", audioUrl: "" }
+    ];
+
+    const audioPlayer = document.getElementById("audioPlayer");
+    const homePage = document.getElementById("homePage");
+    const infoPage = document.getElementById("infoPage");
+    const tabHome = document.getElementById("tabHome");
+    const tabInfo = document.getElementById("tabInfo");
+
+    const searchInput = document.getElementById("searchInput");
+    const listHeading = document.getElementById("listHeading");
+    const clearBtn = document.getElementById("clearBtn");
+    const playedStack = document.getElementById("playedStack");
+
+    const nowPlayingBox = document.getElementById("nowPlayingBox");
+    const nowTitle = document.getElementById("nowTitle");
+    const nowArtist = document.getElementById("nowArtist");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+
+    let currentSongId = null;
+    let playerStatusNote = "";
+
+    function switchTab(target) {
+      const isHome = target === "home";
+      homePage.style.display = isHome ? "block" : "none";
+      infoPage.classList.toggle("active", !isHome);
+      tabHome.classList.toggle("active", isHome);
+      tabInfo.classList.toggle("active", !isHome);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function getPlayedIds() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function recordPlayed(songId) {
+      const updated = [songId, ...getPlayedIds().filter(id => id !== songId)];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+
+    function getCurrentSong() {
+      return catalog.find(item => item.id === currentSongId) || null;
+    }
+
+    function syncNowPlayingBar(song = getCurrentSong()) {
+      if (!song) {
+        nowPlayingBox.classList.remove("visible");
+        nowTitle.textContent = "";
+        nowArtist.textContent = "";
+        return;
+      }
+
+      nowPlayingBox.classList.add("visible");
+      nowTitle.textContent = song.title;
+      nowArtist.textContent = playerStatusNote
+        ? `${song.artist} • ${playerStatusNote}`
+        : song.artist;
+
+      if (!song.audioUrl) {
+        playPauseBtn.textContent = "Tanpa Link";
+        return;
+      }
+
+      playPauseBtn.textContent = audioPlayer.paused ? "Putar" : "Jeda";
+    }
+
+    function renderItem(song, isPlaylistItem) {
+      const isCurrent = song.id === currentSongId;
+      const isPlaying = isCurrent && !audioPlayer.paused;
+
+      return `
+        <div class="song-item ${isCurrent ? "active" : ""}" onclick="selectSong(${song.id})">
+          <div class="song-icon">${isPlaylistItem ? "♪" : "+"}</div>
+          <div class="song-info">
+            <div class="song-title">${song.title}</div>
+            <div class="song-artist">${song.artist}</div>
+          </div>
+          <div class="action-tag">${isPlaying ? "Jeda" : "Putar"}</div>
+        </div>
+      `;
+    }
+
+    function renderStack() {
+      const q = searchInput.value.trim().toLowerCase();
+
+      if (q) {
+        listHeading.textContent = `Hasil Pencarian ("${searchInput.value.trim()}")`;
+        clearBtn.style.display = "none";
+
+        const matches = catalog.filter(
+          song =>
+            song.title.toLowerCase().includes(q) ||
+            song.artist.toLowerCase().includes(q)
+        );
+
+        if (!matches.length) {
+          playedStack.innerHTML = `<div class="empty-search">Lagu tidak ditemukan.</div>`;
+          return;
+        }
+
+        playedStack.innerHTML = matches.map(song => renderItem(song, false)).join("");
+        return;
+      }
+
+      listHeading.textContent = "Playlist";
+
+      const playedSongs = getPlayedIds()
+        .map(id => catalog.find(song => song.id === id))
+        .filter(Boolean);
+
+      clearBtn.style.display = playedSongs.length ? "inline-block" : "none";
+      playedStack.innerHTML = playedSongs.length
+        ? playedSongs.map(song => renderItem(song, true)).join("")
+        : "";
+    }
+
+    // Fungsi utama menarik dan memutar audio dari URL online
+    async function loadAndPlayAudio(song) {
+      const cleanUrl = (song.audioUrl || "").trim();
+      if (!cleanUrl) {
+        playerStatusNote = "URL audio belum diisi";
+        syncNowPlayingBar(song);
+        renderStack();
+        return;
+      }
+
+      try {
+        playerStatusNote = "Mengambil audio...";
+        syncNowPlayingBar(song);
+
+        if (audioPlayer.src !== cleanUrl) {
+          audioPlayer.src = cleanUrl;
+          audioPlayer.load();
+        }
+
+        await audioPlayer.play();
+        playerStatusNote = "Sedang diputar";
+        syncNowPlayingBar(song);
+        renderStack();
+      } catch (err) {
+        playerStatusNote = "Gagal memutar audio";
+        syncNowPlayingBar(song);
+        renderStack();
+      }
+    }
+
+    async function selectSong(songId) {
+      const song = catalog.find(item => item.id === songId);
+      if (!song) return;
+
+      currentSongId = song.id;
+      recordPlayed(song.id);
+      syncNowPlayingBar(song);
+      renderStack();
+      await loadAndPlayAudio(song);
+    }
+
+    // Opsional: menarik katalog lagu dari JSON online bila REMOTE_CATALOG_URL diisi
+    async function fetchRemoteCatalog() {
+      const url = (REMOTE_CATALOG_URL || "").trim();
+      if (!url) return;
+
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length) {
+          catalog = data;
+          renderStack();
+          syncNowPlayingBar();
+        }
+      } catch {
+        // Tetap gunakan catalog bawaan jika penarikan JSON gagal
+      }
+    }
+
+    audioPlayer.addEventListener("playing", () => {
+      playerStatusNote = "Sedang diputar";
+      syncNowPlayingBar();
+      renderStack();
+    });
+
+    audioPlayer.addEventListener("pause", () => {
+      if (getCurrentSong()) {
+        playerStatusNote = "Dijeda";
+      }
+      syncNowPlayingBar();
+      renderStack();
+    });
+
+    audioPlayer.addEventListener("ended", () => {
+      playerStatusNote = "Selesai";
+      syncNowPlayingBar();
+      renderStack();
+    });
+
+    audioPlayer.addEventListener("error", () => {
+      if (getCurrentSong() && getCurrentSong().audioUrl) {
+        playerStatusNote = "Link audio tidak dapat diputar";
+        syncNowPlayingBar();
+        renderStack();
+      }
+    });
+
+    tabHome.addEventListener("click", () => switchTab("home"));
+    tabInfo.addEventListener("click", () => switchTab("info"));
+
+    playPauseBtn.addEventListener("click", async () => {
+      const song = getCurrentSong();
+      if (!song) return;
+
+      if (!song.audioUrl) {
+        playerStatusNote = "URL audio belum diisi";
+        syncNowPlayingBar(song);
+        return;
+      }
+
+      if (audioPlayer.paused) {
+        await loadAndPlayAudio(song);
+      } else {
+        audioPlayer.pause();
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      renderStack();
+    });
+
+    searchInput.addEventListener("input", renderStack);
+
+    renderStack();
+    fetchRemoteCatalog();
+  </script>
+</body>
+</html>
