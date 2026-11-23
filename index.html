@@ -50,7 +50,6 @@
       padding-bottom: 132px;
     }
 
-    /* Motif tema musik menyeluruh di latar belakang */
     .bg-music-layer {
       position: fixed;
       inset: 0;
@@ -77,22 +76,9 @@
       background: linear-gradient(180deg, var(--cyan), rgba(0, 240, 255, 0.06));
     }
 
-    .bg-eq-strip.top-strip {
-      top: 108px;
-      height: 54px;
-    }
-
-    .bg-eq-strip.mid-strip {
-      top: 46%;
-      height: 68px;
-      opacity: 0.12;
-    }
-
-    .bg-eq-strip.bot-strip {
-      bottom: 135px;
-      height: 52px;
-      opacity: 0.13;
-    }
+    .bg-eq-strip.top-strip { top: 108px; height: 54px; }
+    .bg-eq-strip.mid-strip { top: 46%; height: 68px; opacity: 0.12; }
+    .bg-eq-strip.bot-strip { bottom: 135px; height: 52px; opacity: 0.13; }
 
     .bg-eq-strip span:nth-child(3n+1) { height: 35%; }
     .bg-eq-strip span:nth-child(3n+2) { height: 75%; }
@@ -137,7 +123,14 @@
       text-shadow: 0 0 10px var(--cyan-glow);
     }
 
-    /* Halaman Home */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
     .top-search {
       margin-bottom: 18px;
     }
@@ -168,6 +161,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 10px;
+      gap: 8px;
     }
 
     .list-title {
@@ -289,20 +283,10 @@
       border-radius: 11px;
     }
 
-    /* Halaman Info */
-    .info-page {
-      display: none;
-    }
-
-    .info-page.active {
-      display: block;
-    }
-
     .info-card {
       padding: 16px 14px;
       border-radius: 13px;
-      background:
-        linear-gradient(135deg, rgba(0, 240, 255, 0.11), rgba(6, 20, 28, 0.92));
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.11), rgba(6, 20, 28, 0.92));
       border: 1px solid var(--cyan-border);
       box-shadow: 0 0 18px rgba(0, 240, 255, 0.12);
       margin-bottom: 12px;
@@ -378,7 +362,6 @@
       box-shadow: 0 0 14px rgba(0, 240, 255, 0.14);
     }
 
-    /* Dock bawah: lagu sedang diputar (jika ada) + menu Home & Info */
     .bottom-dock {
       position: fixed;
       left: 0;
@@ -505,15 +488,17 @@
   <div class="app">
     <div class="brand-mini">REZZ <span>Musik</span></div>
 
-    <!-- Halaman Home -->
-    <div id="homePage">
+    <div id="homePage" class="page active">
       <div class="top-search">
         <input
           id="searchInput"
           class="search-input"
-          type="search"
+          type="text"
           placeholder="Ketik judul lagu atau penyanyi..."
           autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         />
       </div>
 
@@ -525,8 +510,7 @@
       <div id="playedStack" class="played-stack"></div>
     </div>
 
-    <!-- Halaman Info -->
-    <div id="infoPage" class="info-page">
+    <div id="infoPage" class="page">
       <div class="info-card">
         <div class="info-release">DI RILIS OLEH: REZZ PROJECT</div>
         <div class="info-date">Pada tanggal 24 November</div>
@@ -578,11 +562,8 @@
 
   <script>
     const STORAGE_KEY = "rezz_musik_playlist_v1";
-
-    // Opsional: isi jika kamu mau menarik daftar lagu dari file JSON online (biarkan "" untuk pakai catalog lokal di bawah)
     const REMOTE_CATALOG_URL = "";
 
-    // Katalog lagu: isi audioUrl dengan URL audio online langsung (misalnya .mp3)
     let catalog = [
       { id: 1, title: "Senja di Kota Hujan", artist: "Raka Pradana", audioUrl: "" },
       { id: 2, title: "Langkah Malam", artist: "Nadia Kusuma", audioUrl: "" },
@@ -612,7 +593,7 @@
 
     function switchTab(target) {
       const isHome = target === "home";
-      homePage.style.display = isHome ? "block" : "none";
+      homePage.classList.toggle("active", isHome);
       infoPage.classList.toggle("active", !isHome);
       tabHome.classList.toggle("active", isHome);
       tabInfo.classList.toggle("active", !isHome);
@@ -677,20 +658,21 @@
     }
 
     function renderStack() {
-      const q = searchInput.value.trim().toLowerCase();
+      const rawQuery = searchInput ? searchInput.value : "";
+      const q = rawQuery.replace(/\s+/g, " ").trim().toLowerCase();
 
-      if (q) {
-        listHeading.textContent = `Hasil Pencarian ("${searchInput.value.trim()}")`;
+      if (q.length > 0) {
+        listHeading.textContent = `Hasil Pencarian (${q})`;
         clearBtn.style.display = "none";
 
-        const matches = catalog.filter(
-          song =>
-            song.title.toLowerCase().includes(q) ||
-            song.artist.toLowerCase().includes(q)
-        );
+        const matches = catalog.filter(song => {
+          const title = String(song.title || "").toLowerCase();
+          const artist = String(song.artist || "").toLowerCase();
+          return title.includes(q) || artist.includes(q);
+        });
 
         if (!matches.length) {
-          playedStack.innerHTML = `<div class="empty-search">Lagu tidak ditemukan.</div>`;
+          playedStack.innerHTML = `<div class="empty-search">Tidak ada hasil untuk "${q}". Coba kata lain (misal: senja, nadia, sora).</div>`;
           return;
         }
 
@@ -710,7 +692,6 @@
         : "";
     }
 
-    // Fungsi utama menarik dan memutar audio dari URL online
     async function loadAndPlayAudio(song) {
       const cleanUrl = (song.audioUrl || "").trim();
       if (!cleanUrl) {
@@ -751,7 +732,6 @@
       await loadAndPlayAudio(song);
     }
 
-    // Opsional: menarik katalog lagu dari JSON online bila REMOTE_CATALOG_URL diisi
     async function fetchRemoteCatalog() {
       const url = (REMOTE_CATALOG_URL || "").trim();
       if (!url) return;
@@ -766,7 +746,7 @@
           syncNowPlayingBar();
         }
       } catch {
-        // Tetap gunakan catalog bawaan jika penarikan JSON gagal
+        // Tetap gunakan catalog bawaan
       }
     }
 
@@ -823,7 +803,11 @@
       renderStack();
     });
 
-    searchInput.addEventListener("input", renderStack);
+    if (searchInput) {
+      searchInput.addEventListener("input", renderStack);
+      searchInput.addEventListener("keyup", renderStack);
+      searchInput.addEventListener("search", renderStack);
+    }
 
     renderStack();
     fetchRemoteCatalog();
